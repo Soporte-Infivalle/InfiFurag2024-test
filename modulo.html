@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FURAG 2025 — Módulo</title>
+  <title>FURAG 2024 — Módulo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <body>
 
   <header class="app-header">
-    <a href="index.html" class="header-logo">FURAG <em>2025</em></a>
+    <a href="index.html" class="header-logo">FURAG <em>2024</em></a>
     <div style="display:flex;align-items:center;gap:.75rem">
       <span class="header-badge" id="h-badge">Módulo</span>
       <a href="admin.html" class="header-admin-btn" title="Panel Admin">⚙</a>
@@ -102,7 +102,7 @@
       if (!MOD) { location.href = 'index.html'; return; }
       document.getElementById('loading-msg').textContent = `Cargando módulo ${MOD}…`;
       document.getElementById('h-badge').textContent = `Módulo ${MOD}`;
-      document.title = `FURAG 2025 — ${MOD}`;
+      document.title = `FURAG 2024 — ${MOD}`;
       try {
         questions = await fetchJSON(`${CONFIG.DATA_DIR}/modulos/${MOD}.json`);
         const saved = getSaved();
