@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FURAG 2024 — Módulo</title>
+  <title>FURAG 2025 — Módulo</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <body>
 
   <header class="app-header">
-    <a href="index.html" class="header-logo">FURAG <em>2024</em></a>
+    <a href="index.html" class="header-logo">FURAG <em>2025</em></a>
     <div style="display:flex;align-items:center;gap:.75rem">
       <span class="header-badge" id="h-badge">Módulo</span>
       <a href="admin.html" class="header-admin-btn" title="Panel Admin">⚙</a>
@@ -102,11 +102,42 @@
       if (!MOD) { location.href = 'index.html'; return; }
       document.getElementById('loading-msg').textContent = `Cargando módulo ${MOD}…`;
       document.getElementById('h-badge').textContent = `Módulo ${MOD}`;
-      document.title = `FURAG 2024 — ${MOD}`;
+      document.title = `FURAG 2025 — ${MOD}`;
       try {
         questions = await fetchJSON(`${CONFIG.DATA_DIR}/modulos/${MOD}.json`);
+        // 1. Base: localStorage local
         const saved = getSaved();
         responses = saved[MOD] ? deepClone(saved[MOD]) : {};
+
+        // 2. El Sheet siempre gana — fetch por módulo directamente
+        if (CONFIG.WEBHOOK_URL) {
+          try {
+            const res  = await fetch(CONFIG.WEBHOOK_URL + '?mod=' + MOD, { method: 'GET', mode: 'cors' });
+            const json = await res.json();
+            if (json.status === 'ok' && json.respuestas && json.respuestas[MOD]) {
+              const remoteMod = json.respuestas[MOD];
+              // Sobreescribir completamente con lo del Sheet
+              responses = {};
+              Object.entries(remoteMod).forEach(([idStr, val]) => {
+                responses[idStr] = {
+                  respuesta: val.respuesta ?? null,
+                  evidencia: val.evidencia ?? '',
+                  otra:      val.otra      ?? '',
+                };
+              });
+              // Actualizar también el progreso global en index si está cacheado
+              if (json.progreso) {
+                sessionStorage.setItem('furag_remote_progress', JSON.stringify(json.progreso));
+              }
+            }
+            // Persistir en localStorage para disponibilidad offline
+            const all = getSaved();
+            all[MOD] = deepClone(responses);
+            localStorage.setItem('furag25_state', JSON.stringify(all));
+          } catch(fetchErr) {
+            // Sin conexión al Sheet — continuar con localStorage sin bloquear
+          }
+        }
         renderForm();
         show('s-form');
       } catch(e) {
