@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FURAG 2025 — Módulo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/modulo.css">
+  <script src="config.js"></script>
+</head>
+<body>
+
+  <header class="app-header">
+    <a href="index.html" class="header-logo">FURAG <em>2025</em></a>
+    <div style="display:flex;align-items:center;gap:.75rem">
+      <span class="header-badge" id="h-badge">Módulo</span>
+      <a href="admin.html" class="header-admin-btn" title="Panel Admin">⚙</a>
+    </div>
+  </header>
+
+  <div id="s-loading" class="center-screen">
+    <div class="spinner"></div>
+    <p style="color:var(--muted);font-size:.9rem" id="loading-msg">Cargando preguntas…</p>
+  </div>
+
+  <div id="s-form" style="display:none">
+    <div class="page-narrow">
+      <div class="form-top">
+        <a href="index.html" class="btn btn-ghost">← Volver</a>
+        <div>
+          <div class="mod-title" id="f-title"></div>
+          <div class="mod-subtitle" id="f-subtitle"></div>
+        </div>
+      </div>
+      <div class="prog-header">
+        <span id="prog-label">0 de 0 respondidas</span>
+        <span id="prog-pct">0%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="prog-fill" style="width:0%"></div>
+      </div>
+      <div id="q-list"></div>
+    </div>
+    <div class="submit-bar">
+      <div class="bar-info">
+        <strong id="bar-ans">0</strong> respondidas ·
+        <strong id="bar-pend">0</strong> pendientes
+      </div>
+      <button id="btn-submit" class="btn btn-primary" onclick="submitAnswers()">
+        Guardar respuestas ↗
+      </button>
+    </div>
+  </div>
+
+  <div id="s-success" style="display:none" class="center-screen">
+    <div class="success-icon">✓</div>
+    <h2 class="success-title">¡Enviado correctamente!</h2>
+    <p class="success-sub">Tus respuestas fueron guardadas en Google Sheets.</p>
+    <a href="index.html" class="btn btn-outline">Responder otro módulo</a>
+  </div>
+
+  <div id="s-error" style="display:none" class="center-screen">
+    <div class="err-icon">⚠️</div>
+    <div class="err-title">No se pudo cargar el módulo</div>
+    <div class="err-code" id="err-detail"></div>
+    <div style="display:flex;gap:.75rem;flex-wrap:wrap;justify-content:center">
+      <button class="btn btn-outline" onclick="location.reload()">Reintentar</button>
+      <a href="index.html" class="btn btn-ghost">Volver al inicio</a>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" role="alert"></div>
+
+  <script src="js/shared.js"></script>
+  <script>
+    const MODULE_NAMES = {
+      CCP:'Control de Corrupción y Protección', CIN:'Control Interno',
+      DJU:'Defensa Jurídica', EMI:'Emisiones y Medio Ambiente',
+      FIN:'Financiero', FOR:'Fortalecimiento Organizacional',
+      GCI:'Gestión Ciudadana', GDI:'Gestión de la Información',
+      GDO:'Gestión Documental', GTH:'Gestión del Talento Humano',
+      INT:'Integridad', PCI:'Participación Ciudadana',
+      PER:'Percepción', PLA:'Planeación', SDI:'Seguridad Digital',
+      SEC:'Servicio al Ciudadano', SYE:'Seguimiento y Evaluación',
+      THI:'Tecnologías de la Información', TRA:'Transparencia',
+    };
+
+    const params  = new URLSearchParams(location.search);
+    const MOD     = (params.get('mod') || '').toUpperCase();
+    const NOMBRE  = sessionStorage.getItem('furag_nombre')  || '';
+    const ENTIDAD = sessionStorage.getItem('furag_entidad') || '';
+
+    let questions = [];
+    // responses[qId] = { respuesta, evidencia, otra }
+    let responses = {};
+
+    // ── Boot ─────────────────────────────────────────
+    async function boot() {
+      if (!MOD) { location.href = 'index.html'; return; }
+      document.getElementById('loading-msg').textContent = `Cargando módulo ${MOD}…`;
+      document.getElementById('h-badge').textContent = `Módulo ${MOD}`;
+      document.title = `FURAG 2025 — ${MOD}`;
+      try {
+        questions = await fetchJSON(`${CONFIG.DATA_DIR}/modulos/${MOD}.json`);
+        const saved = getSaved();
+        responses = saved[MOD] ? deepClone(saved[MOD]) : {};
+        renderForm();
+        show('s-form');
+      } catch(e) {
+        document.getElementById('err-detail').textContent = e.message;
+        show('s-error');
+      }
+    }
+
+    function deepClone(obj) { return JSON.parse(JSON.stringify(obj)); }
+
+    function show(id) {
+      ['s-loading','s-form','s-success','s-error'].forEach(s => {
+        const el = document.getElementById(s);
+        el.style.display = s === id ? (s === 's-form' ? 'block' : 'flex') : 'none';
+      });
+    }
+
+    // ── Helpers ───────────────────────────────────────
+    function esc(s) {
+      return String(s||'')
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // Una opción despliega texto libre si termina en ":"
+    // Cubre: "Otro ¿Cuál?:", "Ingrese el enlace:", "Justifique su respuesta:", etc.
+    function isOtraOpcion(op) {
+      return /:\s*$/.test(op);
+    }
+
+    function getRespuesta(qId) { return responses[qId]?.respuesta ?? responses[qId] ?? null; }
+    function getEvidencia(qId) { return responses[qId]?.evidencia ?? ''; }
+    function getOtraVal(qId)   { return responses[qId]?.otra ?? ''; }
+
+    function setRespuesta(qId, value) {
+      const prev = (typeof responses[qId] === 'object' && !Array.isArray(responses[qId])) ? responses[qId] : {};
+      responses[qId] = { respuesta: value, evidencia: prev.evidencia||'', otra: prev.otra||'' };
+    }
+
+    function setEvidencia(qId, value) {
+      const prev = (typeof responses[qId] === 'object' && !Array.isArray(responses[qId])) ? responses[qId] : { respuesta: getRespuesta(qId) };
+      responses[qId] = { ...prev, evidencia: value };
+    }
+
+    function setOtra(qId, value) {
+      const prev = (typeof responses[qId] === 'object' && !Array.isArray(responses[qId])) ? responses[qId] : { respuesta: getRespuesta(qId) };
+      responses[qId] = { ...prev, otra: value };
+    }
+
+    // ── Build card ────────────────────────────────────
+    function buildCard(q) {
+      const answered = isAnswered(q.id);
+      const respVal  = getRespuesta(q.id);
+      const evVal    = getEvidencia(q.id);
+      const otraVal  = getOtraVal(q.id);
+      let input = '';
+
+      if (q.tipo === 'Selección única') {
+        const sel = respVal || '';
+        const optsHtml = q.opciones.map(op => {
+          const isOtra   = isOtraOpcion(op);
+          const showOtra = isOtra && sel === op;
+          return (
+            `<label class="opt${sel===op?' sel':''}">` +
+              `<input type="radio" name="q${q.id}" value="${esc(op)}"${sel===op?' checked':''}>` +
+              `<span class="opt-lbl">${esc(op)}</span>` +
+            `</label>` +
+            (isOtra
+              ? `<div class="otra-block" id="otra-${q.id}" style="display:${showOtra?'block':'none'}">` +
+                  `<textarea class="otra-textarea" data-otraid="${q.id}" placeholder="Especifica aquí…">${esc(otraVal)}</textarea>` +
+                `</div>`
+              : '')
+          );
+        }).join('');
+        input = `<div class="opts">${optsHtml}</div>`;
+
+      } else if (q.tipo === 'Selección múltiple' || q.tipo === 'Selección múltiple numérica') {
+        const sel = Array.isArray(respVal) ? respVal : [];
+        const hasOtraSelected = sel.some(v => isOtraOpcion(v));
+        const optsHtml = q.opciones.map(op =>
+          `<label class="opt${sel.includes(op)?' sel':''}">` +
+            `<input type="checkbox" name="q${q.id}" value="${esc(op)}"${sel.includes(op)?' checked':''}>` +
+            `<span class="opt-lbl">${esc(op)}</span>` +
+          `</label>`
+        ).join('');
+        const otraBlock = q.opciones.some(isOtraOpcion)
+          ? `<div class="otra-block" id="otra-${q.id}" style="display:${hasOtraSelected?'block':'none'}">` +
+              `<textarea class="otra-textarea" data-otraid="${q.id}" placeholder="Especifica aquí…">${esc(otraVal)}</textarea>` +
+            `</div>`
+          : '';
+        input = `<div class="opts">${optsHtml}</div>${otraBlock}`;
+
+      } else if (q.tipo === 'Abierta numérica') {
+        input = `<input type="number" class="q-number" data-qid="${q.id}" value="${esc(String(respVal||''))}" placeholder="Ingresa un número">`;
+
+      } else {
+        input = `<textarea class="q-textarea" data-qid="${q.id}" placeholder="Escribe tu respuesta…">${esc(respVal||'')}</textarea>`;
+      }
+
+      const evidenciaHTML = q.evidencia
+        ? `<div class="ev-block">` +
+            `<div class="ev-label">` +
+              `<span class="ev-icon">📎</span>` +
+              `Descripción de evidencia` +
+              `<span class="ev-hint">Describe brevemente la evidencia que soporta tu respuesta</span>` +
+            `</div>` +
+            `<textarea class="ev-textarea" data-evid="${q.id}" placeholder="Ej: Resolución N° 123 del 15/03/2025, disponible en SIGEP…">${esc(evVal)}</textarea>` +
+          `</div>`
+        : '';
+
+      return (
+        `<div class="q-card${answered?' answered':''}" id="qc${q.id}">` +
+          `<div class="q-top">` +
+            `<span class="q-badge">${esc(q.codigo)}</span>` +
+            `<span class="q-text">${esc(q.texto)}</span>` +
+          `</div>` +
+          `<div class="q-meta">` +
+            `<span class="q-type-label">${esc(q.tipo)}</span>` +
+            (q.evidencia ? `<span class="ev-badge">Requiere evidencia</span>` : '') +
+          `</div>` +
+          input +
+          evidenciaHTML +
+        `</div>`
+      );
+    }
+
+    // ── Render ────────────────────────────────────────
+    function renderForm() {
+      document.getElementById('f-title').textContent    = `Módulo ${MOD} — ${MODULE_NAMES[MOD]||''}`;
+      document.getElementById('f-subtitle').textContent = `${questions.length} preguntas · orden oficial FURAG`;
+      const list = document.getElementById('q-list');
+      list.innerHTML = questions.map(buildCard).join('');
+      list.addEventListener('change', onInteraction);
+      list.addEventListener('input',  onTextInput);
+      updateProgress();
+    }
+
+    // ── Events ────────────────────────────────────────
+    function onInteraction(e) {
+      const t = e.target;
+      if (!t.matches('input[type="checkbox"],input[type="radio"]')) return;
+      const qId = parseInt(t.name.slice(1));
+
+      if (t.type === 'checkbox') {
+        const vals = [...document.querySelectorAll(`input[name="${t.name}"]:checked`)].map(i => i.value);
+        setRespuesta(qId, vals);
+        t.closest('.opt').classList.toggle('sel', t.checked);
+        // Mostrar/ocultar textarea "otra" para selección múltiple
+        const otraBlock = document.getElementById('otra-' + qId);
+        if (otraBlock) {
+          const anyOtra = vals.some(v => isOtraOpcion(v));
+          otraBlock.style.display = anyOtra ? 'block' : 'none';
+          if (!anyOtra) { setOtra(qId, ''); otraBlock.querySelector('textarea').value = ''; }
+        }
+      } else {
+        setRespuesta(qId, t.value);
+        document.querySelectorAll(`input[name="${t.name}"]`).forEach(r =>
+          r.closest('.opt').classList.toggle('sel', r.checked));
+        // Para selección única: ocultar todos los bloques otra primero, luego mostrar el que aplique
+        const otraBlock = document.getElementById('otra-' + qId);
+        if (otraBlock) {
+          const show = isOtraOpcion(t.value);
+          otraBlock.style.display = show ? 'block' : 'none';
+          if (!show) { setOtra(qId, ''); otraBlock.querySelector('textarea').value = ''; }
+        }
+      }
+      persist(); refreshCard(qId); updateProgress();
+    }
+
+    function onTextInput(e) {
+      const t = e.target;
+      if (t.dataset.evid)   { setEvidencia(parseInt(t.dataset.evid),  t.value); persist(); return; }
+      if (t.dataset.otraid) { setOtra(parseInt(t.dataset.otraid), t.value);      persist(); return; }
+      if (!t.dataset.qid)   return;
+      const qId = parseInt(t.dataset.qid);
+      setRespuesta(qId, t.value.trim());
+      persist(); refreshCard(qId); updateProgress();
+    }
+
+    // ── State helpers ─────────────────────────────────
+    function isAnswered(qId) {
+      const v = getRespuesta(qId);
+      return v !== null && v !== undefined && v !== '' && !(Array.isArray(v) && !v.length);
+    }
+
+    function refreshCard(qId) {
+      const c = document.getElementById('qc' + qId);
+      if (c) c.classList.toggle('answered', isAnswered(qId));
+    }
+
+    function updateProgress() {
+      const answered = questions.filter(q => isAnswered(q.id)).length;
+      const total    = questions.length;
+      const pct      = total ? Math.round(answered / total * 100) : 0;
+      document.getElementById('prog-fill').style.width  = pct + '%';
+      document.getElementById('prog-label').textContent = `${answered} de ${total} respondidas`;
+      document.getElementById('prog-pct').textContent   = pct + '%';
+      document.getElementById('bar-ans').textContent    = answered;
+      document.getElementById('bar-pend').textContent   = total - answered;
+    }
+
+    function persist() {
+      const all = getSaved();
+      all[MOD]  = deepClone(responses);
+      localStorage.setItem('furag25_state', JSON.stringify(all));
+    }
+
+    // ── Submit ────────────────────────────────────────
+    async function submitAnswers() {
+      if (!NOMBRE) { toast('Vuelve al inicio e ingresa tu nombre', 'warn'); return; }
+      if (!CONFIG.WEBHOOK_URL) { toast('Configura WEBHOOK_URL en config.js', 'warn'); return; }
+
+      const rows = questions
+        .filter(q => isAnswered(q.id))
+        .map(q => ({
+          timestamp:             new Date().toISOString(),
+          nombre:                NOMBRE,
+          entidad:               ENTIDAD,
+          modulo:                MOD,
+          id_pregunta:           q.id,
+          codigo:                q.codigo,
+          pregunta:              q.texto,
+          tipo:                  q.tipo,
+          respuesta:             Array.isArray(getRespuesta(q.id)) ? getRespuesta(q.id).join(' | ') : String(getRespuesta(q.id)),
+          requiere_evidencia:    q.evidencia ? 'SI' : 'NO',
+          evidencia:             getEvidencia(q.id) || '',
+          informacion_adicional: getOtraVal(q.id) || '',
+        }));
+
+      if (!rows.length) { toast('No hay respuestas para guardar', 'warn'); return; }
+
+      const btn = document.getElementById('btn-submit');
+      btn.disabled = true; btn.textContent = 'Guardando…';
+
+      try {
+        await fetch(CONFIG.WEBHOOK_URL, {
+          method: 'POST', mode: 'no-cors',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ rows }),
+        });
+        // Marcar que hubo submit para que index.html refresque el progreso
+        sessionStorage.setItem('furag_just_submitted', '1');
+        show('s-success');
+      } catch(e) {
+        toast('Error al enviar: ' + e.message, 'error');
+      } finally {
+        btn.disabled = false; btn.textContent = 'Guardar respuestas ↗';
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', boot);
+  </script>
+</body>
+</html>

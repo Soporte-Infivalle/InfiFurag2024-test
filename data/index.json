@@ -1,0 +1,78 @@
+[
+    {
+        "modulo": "PER",
+        "total": 4
+    },
+    {
+        "modulo": "PLA",
+        "total": 6
+    },
+    {
+        "modulo": "GTH",
+        "total": 28
+    },
+    {
+        "modulo": "INT",
+        "total": 13
+    },
+    {
+        "modulo": "FOR",
+        "total": 19
+    },
+    {
+        "modulo": "GDI",
+        "total": 65
+    },
+    {
+        "modulo": "SDI",
+        "total": 22
+    },
+    {
+        "modulo": "DJU",
+        "total": 28
+    },
+    {
+        "modulo": "SEC",
+        "total": 18
+    },
+    {
+        "modulo": "PCI",
+        "total": 16
+    },
+    {
+        "modulo": "SYE",
+        "total": 16
+    },
+    {
+        "modulo": "TRA",
+        "total": 30
+    },
+    {
+        "modulo": "GDO",
+        "total": 29
+    },
+    {
+        "modulo": "GCI",
+        "total": 24
+    },
+    {
+        "modulo": "CIN",
+        "total": 35
+    },
+    {
+        "modulo": "THI",
+        "total": 27
+    },
+    {
+        "modulo": "EMI",
+        "total": 27
+    },
+    {
+        "modulo": "FIN",
+        "total": 1
+    },
+    {
+        "modulo": "CCP",
+        "total": 15
+    }
+]
