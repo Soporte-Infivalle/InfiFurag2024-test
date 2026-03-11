@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>FURAG 2025 — Inicio</title>
+  <title>FURAG 2024 — Inicio</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,600&display=swap" rel="stylesheet">
@@ -14,7 +14,7 @@
 <body>
 
   <header class="app-header">
-    <a href="index.html" class="header-logo">FURAG <em>2025</em></a>
+    <a href="index.html" class="header-logo">FURAG <em>2024</em></a>
     <div style="display:flex;align-items:center;gap:.75rem">
       <span class="header-badge">Formulario de Respuestas</span>
       <a href="admin.html" class="header-admin-btn" title="Panel Admin">⚙</a>
@@ -77,28 +77,6 @@
       SYE:'SEGUIMIENTO Y EVALUACIÓN',
       THI:'INF - GESTIÓN ESTRATÉGICA DEL TALENTO HUMANO',
       TRA:'TRANSPARENCIA, ACCESO A LA INFORMACIÓN',
-    };
-
-    const MODULE_RESPONSABLES = {
-      PER: ['Liliana Hinestroza Sinisterra'],
-      PLA: ['Liliana Hinestroza Sinisterra'],
-      GTH: ['Ingrid Yalile Bolívar Jimenez'],
-      INT: ['Ingrid Yalile Bolívar Jimenez'],
-      FOR: ['Liliana Hinestroza Sinisterra', 'Ingrid Yalile Bolívar Jimenez'],
-      GDI: ['Oscar Hernán Rivera Calderon', 'Freddy Alexander Guerrero Vega'],
-      SDI: ['Oscar Hernán Rivera Calderon', 'Freddy Alexander Guerrero Vega'],
-      DJU: ['David Orlando Mina Velasquez'],
-      SEC: ['Claudia Cecilia Herrera Galvez'],
-      PCI: ['Claudia Cecilia Herrera Galvez'],
-      SYE: ['Liliana Hinestroza Sinisterra'],
-      TRA: ['Oscar Hernán Rivera Calderon', 'Claudia Cecilia Herrera Galvez', 'Liliana Hinestroza Sinisterra'],
-      GDO: ['Luis Enrique Garzón Taquez'],
-      GCI: ['Ingrid Yalile Bolívar Jimenez', 'Oscar Hernán Rivera Calderon', 'Claudia Lorena Murillo Velez', 'Holmer Jose Reyes Sotelo'],
-      CIN: ['Oscar Hernán Rivera Calderon', 'Carlos Horacio Libreros Salamanca', 'Liliana Hinestroza Sinisterra'],
-      THI: ['Ingrid Yalile Bolívar Jimenez'],
-      EMI: ['Todos - Comité Institucional de Gestión'],
-      FIN: ['Todos - Comité Institucional de Gestión'],
-      CCP: ['Luis Enrique Garzón Taquez'],
     };
 
     // Estado global
@@ -180,13 +158,6 @@
     function renderGrid() {
       const grid = document.getElementById('mod-grid');
       grid.innerHTML = moduleIndex.map(({ modulo, total }, i) => {
-        const resps   = MODULE_RESPONSABLES[modulo] || [];
-        const respHTML = resps.length
-          ? '<div class="mod-responsables">' +
-              resps.map(r => '<span class="mod-resp-tag">' + r + '</span>').join('') +
-            '</div>'
-          : '';
-
         return (
           '<div class="mod-card" id="mc-' + modulo + '"' +
                ' onclick="goModule(\'' + modulo + '\')" role="button" tabindex="0"' +
@@ -197,7 +168,6 @@
               '<span class="mod-prog-remote hidden"></span>' +
             '</div>' +
             '<div class="mod-name">' + (MODULE_NAMES[modulo] || modulo) + '</div>' +
-            respHTML +
             '<div class="mod-bar-track"><div class="mod-bar-fill" style="width:0%"></div></div>' +
             '<div class="mod-footer">' +
               '<span class="mod-count">' + total + ' preguntas</span>' +
