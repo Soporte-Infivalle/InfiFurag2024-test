@@ -79,6 +79,27 @@
       TRA:'TRANSPARENCIA, ACCESO A LA INFORMACIÓN',
     };
 
+    const MODULE_RESPONSABLES = {
+      PER: ['Liliana Hinestroza Sinisterra'],
+      PLA: ['Liliana Hinestroza Sinisterra'],
+      GTH: ['Ingrid Yalile Bolívar Jimenez'],
+      INT: ['Ingrid Yalile Bolívar Jimenez'],
+      FOR: ['Liliana Hinestroza Sinisterra', 'Ingrid Yalile Bolívar Jimenez'],
+      GDI: ['Oscar Hernán Rivera Calderon', 'Freddy Alexander Guerrero Vega'],
+      SDI: ['Oscar Hernán Rivera Calderon', 'Freddy Alexander Guerrero Vega'],
+      DJU: ['David Orlando Mina Velasquez'],
+      SEC: ['Claudia Cecilia Herrera Galvez'],
+      PCI: ['Claudia Cecilia Herrera Galvez'],
+      SYE: ['Liliana Hinestroza Sinisterra'],
+      TRA: ['Oscar Hernán Rivera Calderon', 'Claudia Cecilia Herrera Galvez', 'Liliana Hinestroza Sinisterra'],
+      GDO: ['Luis Enrique Garzón Taquez'],
+      GCI: ['Ingrid Yalile Bolívar Jimenez', 'Oscar Hernán Rivera Calderon', 'Claudia Lorena Murillo Velez', 'Holmer Jose Reyes Sotelo'],
+      CIN: ['Oscar Hernán Rivera Calderon', 'Carlos Horacio Libreros Salamanca', 'Liliana Hinestroza Sinisterra'],
+      THI: ['Ingrid Yalile Bolívar Jimenez'],
+      EMI: ['Todos - Comité Institucional de Gestión'],
+      FIN: ['Todos - Comité Institucional de Gestión'],
+      CCP: ['Luis Enrique Garzón Taquez'],
+    };
 
     // Estado global
     let moduleIndex   = [];   // [{modulo, total}] — orden FURAG
@@ -159,7 +180,12 @@
     function renderGrid() {
       const grid = document.getElementById('mod-grid');
       grid.innerHTML = moduleIndex.map(({ modulo, total }, i) => {
-
+        const resps   = MODULE_RESPONSABLES[modulo] || [];
+        const respHTML = resps.length
+          ? '<div class="mod-responsables">' +
+              resps.map(r => '<span class="mod-resp-tag">' + r + '</span>').join('') +
+            '</div>'
+          : '';
 
         return (
           '<div class="mod-card" id="mc-' + modulo + '"' +
