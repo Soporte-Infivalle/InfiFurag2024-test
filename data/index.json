@@ -1,1 +1,82 @@
-[{"modulo":"PER","total":7},{"modulo":"PLA","total":7},{"modulo":"GTH","total":28},{"modulo":"INT","total":13},{"modulo":"FOR","total":19},{"modulo":"GDI","total":65},{"modulo":"SDI","total":22},{"modulo":"DJU","total":29},{"modulo":"SEC","total":19},{"modulo":"RTR","total":29},{"modulo":"PCI","total":17},{"modulo":"SYE","total":16},{"modulo":"TRA","total":33},{"modulo":"GDO","total":28},{"modulo":"GCI","total":24},{"modulo":"CIN","total":37},{"modulo":"THI","total":27},{"modulo":"EMI","total":10},{"modulo":"FIN","total":1},{"modulo":"CCP","total":15}]
+[
+    {
+        "modulo": "PER",
+        "total": 7
+    },
+    {
+        "modulo": "PLA",
+        "total": 7
+    },
+    {
+        "modulo": "GTH",
+        "total": 28
+    },
+    {
+        "modulo": "INT",
+        "total": 13
+    },
+    {
+        "modulo": "FOR",
+        "total": 19
+    },
+    {
+        "modulo": "GDI",
+        "total": 65
+    },
+    {
+        "modulo": "SDI",
+        "total": 22
+    },
+    {
+        "modulo": "DJU",
+        "total": 29
+    },
+    {
+        "modulo": "SEC",
+        "total": 19
+    },
+    {
+        "modulo": "RTR",
+        "total": 29
+    },
+    {
+        "modulo": "PCI",
+        "total": 17
+    },
+    {
+        "modulo": "SYE",
+        "total": 16
+    },
+    {
+        "modulo": "TRA",
+        "total": 33
+    },
+    {
+        "modulo": "GDO",
+        "total": 28
+    },
+    {
+        "modulo": "GCI",
+        "total": 24
+    },
+    {
+        "modulo": "CIN",
+        "total": 37
+    },
+    {
+        "modulo": "THI",
+        "total": 27
+    },
+    {
+        "modulo": "EMI",
+        "total": 10
+    },
+    {
+        "modulo": "FIN",
+        "total": 1
+    },
+    {
+        "modulo": "CCP",
+        "total": 15
+    }
+]
